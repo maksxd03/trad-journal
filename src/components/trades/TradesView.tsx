@@ -1,12 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Download, Upload, BarChart3, TrendingUp, Target, Calculator } from 'lucide-react';
 import TradeFilters from './TradeFilters';
 import TradeTable from './TradeTable';
-import { Trade } from '../../types/trade';
-import { mockTrades } from '../../utils/mockData';
+import { useTrades } from '../../hooks/useTrades';
+import { useState } from 'react';
 
 const TradesView: React.FC = () => {
-  const [trades] = useState<Trade[]>(mockTrades);
+  const { trades, loading } = useTrades();
   const [filters, setFilters] = useState({
     dateRange: { start: '', end: '' },
     symbol: '',
@@ -88,6 +88,17 @@ const TradesView: React.FC = () => {
     // Implementation for trade import
     console.log('Importing trades...');
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-neutral-600 dark:text-neutral-400">Loading trades...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

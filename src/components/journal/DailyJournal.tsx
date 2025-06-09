@@ -2,23 +2,22 @@ import React, { useState } from 'react';
 import { Plus, Calendar, Filter, Search, TrendingUp, TrendingDown, Target } from 'lucide-react';
 import TradeForm from './TradeForm';
 import TradeCard from './TradeCard';
-import { Trade } from '../../types/trade';
-import { mockTrades } from '../../utils/mockData';
+import { useTrades } from '../../hooks/useTrades';
 
 const DailyJournal: React.FC = () => {
-  const [trades, setTrades] = useState<Trade[]>(mockTrades);
+  const { trades, addTrade, loading } = useTrades();
   const [showTradeForm, setShowTradeForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSetup, setFilterSetup] = useState('');
 
-  const handleAddTrade = (tradeData: Omit<Trade, 'id'>) => {
-    const newTrade: Trade = {
-      ...tradeData,
-      id: Date.now().toString()
-    };
-    setTrades(prev => [newTrade, ...prev]);
-    setShowTradeForm(false);
+  const handleAddTrade = async (tradeData: any) => {
+    try {
+      await addTrade(tradeData);
+      setShowTradeForm(false);
+    } catch (error) {
+      console.error('Failed to add trade:', error);
+    }
   };
 
   const filteredTrades = trades.filter(trade => {
@@ -42,6 +41,17 @@ const DailyJournal: React.FC = () => {
   };
 
   const setupOptions = ['Breakout', 'Pullback', 'Reversal', 'Gap Fill', 'Momentum', 'Support/Resistance'];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-neutral-600 dark:text-neutral-400">Loading trades...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

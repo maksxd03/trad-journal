@@ -23,9 +23,11 @@ import EquityCurve from './EquityCurve';
 import DrawdownChart from './DrawdownChart';
 import ReturnsDistribution from './ReturnsDistribution';
 import AIInsights from './AIInsights';
-import { mockStats, generateCalendarData } from '../../utils/mockData';
+import { useTrades } from '../../hooks/useTrades';
+import { generateCalendarData } from '../../utils/mockData';
 
 const Dashboard: React.FC = () => {
+  const { trades, loading } = useTrades();
   const [selectedPeriod, setSelectedPeriod] = useState('This month');
   const calendarData = generateCalendarData();
   
@@ -117,6 +119,54 @@ const Dashboard: React.FC = () => {
     }
   ];
 
+  // Calculate real stats from user trades
+  const stats = React.useMemo(() => {
+    if (trades.length === 0) {
+      return {
+        netPnL: 0,
+        winRate: 0,
+        profitFactor: 0,
+        dayWinRate: 0,
+        avgWinLoss: 0
+      };
+    }
+
+    const totalPnL = trades.reduce((sum, trade) => sum + trade.pnl, 0);
+    const winningTrades = trades.filter(trade => trade.pnl > 0);
+    const losingTrades = trades.filter(trade => trade.pnl < 0);
+    
+    const winRate = (winningTrades.length / trades.length) * 100;
+    const totalWinAmount = winningTrades.reduce((sum, trade) => sum + trade.pnl, 0);
+    const totalLossAmount = Math.abs(losingTrades.reduce((sum, trade) => sum + trade.pnl, 0));
+    const profitFactor = totalLossAmount > 0 ? totalWinAmount / totalLossAmount : 0;
+    
+    const avgWin = winningTrades.length > 0 ? totalWinAmount / winningTrades.length : 0;
+    const avgLoss = losingTrades.length > 0 ? totalLossAmount / losingTrades.length : 0;
+    const avgWinLoss = avgLoss > 0 ? avgWin / avgLoss : 0;
+
+    // Calculate day win rate (simplified - assuming one trade per day)
+    const dayWinRate = winRate; // This would need more complex logic for real day-based calculation
+
+    return {
+      netPnL: totalPnL,
+      winRate,
+      profitFactor,
+      dayWinRate,
+      avgWinLoss
+    };
+  }, [trades]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-neutral-600 dark:text-neutral-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -126,7 +176,13 @@ const Dashboard: React.FC = () => {
             Dashboard
           </h1>
           <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-            Last import: Jan 23, 2024 04:16 AM
+            Last import: {new Date().toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
           </p>
         </div>
         
@@ -153,7 +209,7 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
           title="Net P&L"
-          value={1068.11}
+          value={stats.netPnL}
           change={12.5}
           changeLabel="vs last month"
           icon={DollarSign}
@@ -163,54 +219,54 @@ const Dashboard: React.FC = () => {
         />
         <KPICard
           title="Trade win %"
-          value={21.18}
+          value={stats.winRate}
           change={3.2}
           changeLabel="vs last month"
           icon={Target}
           format="percentage"
           color="primary"
           showCircularProgress={true}
-          progressValue={21.18}
+          progressValue={stats.winRate}
           maxValue={100}
         />
         <KPICard
           title="Profit factor"
-          value={0.76}
+          value={stats.profitFactor}
           change={-8.1}
           changeLabel="vs last month"
           icon={TrendingUp}
           color="loss"
           showCircularProgress={true}
-          progressValue={76}
+          progressValue={stats.profitFactor * 100}
           maxValue={100}
         />
         <KPICard
           title="Day win %"
-          value={38.89}
+          value={stats.dayWinRate}
           change={4.3}
           changeLabel="vs last month"
           icon={Activity}
           color="profit"
           showCircularProgress={true}
-          progressValue={38.89}
+          progressValue={stats.dayWinRate}
           maxValue={100}
         />
         <KPICard
           title="Avg win/loss trade"
-          value="2.84"
+          value={stats.avgWinLoss.toFixed(2)}
           change={-1.2}
           changeLabel="vs last month"
           icon={Calculator}
           color="secondary"
           showChart={true}
-          customDisplay="2.84"
+          customDisplay={stats.avgWinLoss.toFixed(2)}
         />
       </div>
 
-      {/* AI Insights Section - Movido para o topo */}
+      {/* AI Insights Section */}
       <AIInsights insights={aiInsights} />
 
-      {/* Main Content Grid - Mais Compacto */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         {/* Left Column - Performance Score */}
         <div className="xl:col-span-4 space-y-6">
@@ -234,7 +290,7 @@ const Dashboard: React.FC = () => {
             <RadarChart />
           </div>
 
-          {/* Daily net cumulative P&L - Igual ao Screenshot */}
+          {/* Daily net cumulative P&L */}
           <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-600 p-4">
             <div className="flex items-center space-x-2 mb-4">
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
@@ -283,22 +339,21 @@ const Dashboard: React.FC = () => {
               <div>Net P&L</div>
             </div>
             
-            {[
-              { date: '12/29/2023', symbol: 'EURUSD', pnl: -30, color: 'text-loss-600 dark:text-loss-400' },
-              { date: '12/29/2023', symbol: 'EURUSD', pnl: -105, color: 'text-loss-600 dark:text-loss-400' },
-              { date: '12/29/2023', symbol: 'EURUSD', pnl: -130, color: 'text-loss-600 dark:text-loss-400' },
-              { date: '12/29/2023', symbol: 'EURUSD', pnl: -300, color: 'text-loss-600 dark:text-loss-400' },
-              { date: '12/29/2023', symbol: 'XAUUSD', pnl: -99, color: 'text-loss-600 dark:text-loss-400' },
-              { date: '12/28/2023', symbol: 'XAUUSD', pnl: -289.6, color: 'text-loss-600 dark:text-loss-400' }
-            ].map((trade, index) => (
+            {trades.slice(0, 6).map((trade, index) => (
               <div key={index} className="grid grid-cols-3 gap-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-lg px-2 -mx-2 transition-colors">
                 <div className="text-neutral-600 dark:text-neutral-400 text-xs">{trade.date}</div>
                 <div className="text-neutral-900 dark:text-white font-medium text-xs">{trade.symbol}</div>
-                <div className={`${trade.color} text-xs`}>
-                  ${trade.pnl}
+                <div className={`text-xs ${trade.pnl >= 0 ? 'text-profit-600 dark:text-profit-400' : 'text-loss-600 dark:text-loss-400'}`}>
+                  ${trade.pnl.toFixed(2)}
                 </div>
               </div>
             ))}
+            
+            {trades.length === 0 && (
+              <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                <p>No trades yet. Start by adding your first trade!</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
