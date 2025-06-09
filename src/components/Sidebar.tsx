@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   BarChart3, 
   Calendar, 
@@ -15,7 +15,9 @@ import {
   Menu,
   X,
   Activity,
-  LogOut
+  LogOut,
+  User,
+  ChevronUp
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,6 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { isDark, toggleTheme } = useTheme();
   const { signOut, user } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -46,9 +49,18 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const getUserName = () => {
     if (user?.user_metadata?.full_name) {
-      return user.user_metadata.full_name.split(' ')[0];
+      return user.user_metadata.full_name;
     }
     return user?.email?.split('@')[0] || 'User';
+  };
+
+  const getUserInitials = () => {
+    const name = getUserName();
+    if (name.includes(' ')) {
+      const parts = name.split(' ');
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
   };
 
   const menuItems = [
@@ -101,25 +113,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* User Info */}
-        {!isCollapsed && (
-          <div className="p-4 border-b border-neutral-700">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold">
-                {getUserName().charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {getUserName()}
-                </p>
-                <p className="text-xs text-neutral-400 truncate">
-                  {user?.email}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
@@ -163,6 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Footer */}
         <div className="p-4 space-y-2 border-t border-neutral-700">
+          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
             className={`
@@ -179,39 +173,110 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
           </button>
 
-          <button 
-            onClick={() => {
-              onTabChange('settings');
-              if (window.innerWidth < 1024) onToggleCollapse();
-            }}
-            className={`
-              w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors
-              ${activeTab === 'settings' 
-                ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25'
-                : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-              }
-              ${isCollapsed && 'justify-center lg:px-2'}
-            `}
-          >
-            <Settings className="w-5 h-5" />
-            {!isCollapsed && (
-              <span className="font-medium text-sm">Settings</span>
-            )}
-          </button>
+          {/* User Profile Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className={`
+                w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors
+                text-neutral-300 hover:bg-neutral-800 hover:text-white
+                ${isCollapsed && 'justify-center lg:px-2'}
+                ${showUserMenu ? 'bg-neutral-800 text-white' : ''}
+              `}
+            >
+              <div className="w-5 h-5 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                {getUserInitials()}
+              </div>
+              {!isCollapsed && (
+                <>
+                  <div className="flex-1 text-left">
+                    <span className="font-medium text-sm block truncate">
+                      {getUserName()}
+                    </span>
+                    <span className="text-xs text-neutral-400 block truncate">
+                      {user?.email}
+                    </span>
+                  </div>
+                  <ChevronUp className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                </>
+              )}
+            </button>
 
-          <button
-            onClick={handleSignOut}
-            className={`
-              w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors
-              text-neutral-300 hover:bg-loss-600 hover:text-white
-              ${isCollapsed && 'justify-center lg:px-2'}
-            `}
-          >
-            <LogOut className="w-5 h-5" />
-            {!isCollapsed && (
-              <span className="font-medium text-sm">Sign Out</span>
+            {/* User Menu Dropdown */}
+            {showUserMenu && !isCollapsed && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg overflow-hidden">
+                <button
+                  onClick={() => {
+                    onTabChange('settings');
+                    setShowUserMenu(false);
+                    if (window.innerWidth < 1024) onToggleCollapse();
+                  }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span className="text-sm">Settings</span>
+                </button>
+                
+                <div className="border-t border-neutral-700"></div>
+                
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-300 hover:bg-loss-600 hover:text-white transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm">Sign Out</span>
+                </button>
+              </div>
             )}
-          </button>
+
+            {/* Collapsed User Menu */}
+            {showUserMenu && isCollapsed && (
+              <div className="absolute bottom-full left-full ml-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg overflow-hidden min-w-48">
+                <div className="px-4 py-3 border-b border-neutral-700">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                      {getUserInitials()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white truncate">
+                        {getUserName()}
+                      </p>
+                      <p className="text-xs text-neutral-400 truncate">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    onTabChange('settings');
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span className="text-sm">Settings</span>
+                </button>
+                
+                <div className="border-t border-neutral-700"></div>
+                
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-300 hover:bg-loss-600 hover:text-white transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm">Sign Out</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

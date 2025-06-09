@@ -23,7 +23,6 @@ import EquityCurve from './EquityCurve';
 import DrawdownChart from './DrawdownChart';
 import ReturnsDistribution from './ReturnsDistribution';
 import AIInsights from './AIInsights';
-import WelcomeMessage from '../WelcomeMessage';
 import { useTrades } from '../../hooks/useTrades';
 import { generateCalendarData } from '../../utils/mockData';
 
@@ -170,9 +169,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Message */}
-      <WelcomeMessage />
-
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
