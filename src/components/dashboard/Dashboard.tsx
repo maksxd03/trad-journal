@@ -207,6 +207,9 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
+      {/* AI Insights Section - Movido para o topo */}
+      <AIInsights insights={aiInsights} />
+
       {/* Main Content Grid - Mais Compacto */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         {/* Left Column - Performance Score */}
@@ -250,9 +253,6 @@ const Dashboard: React.FC = () => {
           <TradingCalendar data={calendarData} enhanced={true} />
         </div>
       </div>
-
-      {/* AI Insights Section */}
-      <AIInsights insights={aiInsights} />
 
       {/* Advanced Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
