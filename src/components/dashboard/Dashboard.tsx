@@ -13,7 +13,12 @@ import {
   Zap,
   Award,
   Brain,
-  AlertTriangle
+  AlertTriangle,
+  Plus,
+  FileText,
+  Download,
+  Users,
+  Lightbulb
 } from 'lucide-react';
 import KPICard from './KPICard';
 import TradingCalendar from './TradingCalendar';
@@ -23,6 +28,7 @@ import EquityCurve from './EquityCurve';
 import DrawdownChart from './DrawdownChart';
 import ReturnsDistribution from './ReturnsDistribution';
 import AIInsights from './AIInsights';
+import WelcomeMessage from './WelcomeMessage';
 import { useTrades } from '../../hooks/useTrades';
 import { generateCalendarData } from '../../utils/mockData';
 
@@ -169,7 +175,10 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Welcome Message */}
+      <WelcomeMessage />
+
+      {/* Header with CTAs */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
@@ -187,9 +196,17 @@ const Dashboard: React.FC = () => {
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium shadow-lg hover:shadow-xl">
+            <Plus className="w-4 h-4" />
+            <span>New Trade</span>
+          </button>
+          <button className="flex items-center space-x-2 px-4 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 transition-colors font-medium">
             <Upload className="w-4 h-4" />
-            <span>Resync</span>
+            <span>Import Data</span>
+          </button>
+          <button className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors">
+            <FileText className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+            <span className="text-neutral-700 dark:text-neutral-300">Generate Report</span>
           </button>
           <button className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors">
             <Filter className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
@@ -199,13 +216,10 @@ const Dashboard: React.FC = () => {
             <Calendar className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
             <span className="text-neutral-700 dark:text-neutral-300">Date range</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors">
-            <span className="text-neutral-700 dark:text-neutral-300">All accounts</span>
-          </button>
         </div>
       </div>
 
-      {/* Top KPI Row - Compact Style */}
+      {/* Top KPI Row - Enhanced with better icons and visual indicators */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
           title="Net P&L"
@@ -343,7 +357,8 @@ const Dashboard: React.FC = () => {
               <div key={index} className="grid grid-cols-3 gap-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-lg px-2 -mx-2 transition-colors">
                 <div className="text-neutral-600 dark:text-neutral-400 text-xs">{trade.date}</div>
                 <div className="text-neutral-900 dark:text-white font-medium text-xs">{trade.symbol}</div>
-                <div className={`text-xs ${trade.pnl >= 0 ? 'text-profit-600 dark:text-profit-400' : 'text-loss-600 dark:text-loss-400'}`}>
+                <div className={`text-xs flex items-center ${trade.pnl >= 0 ? 'text-profit-600 dark:text-profit-400' : 'text-loss-600 dark:text-loss-400'}`}>
+                  {trade.pnl >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingUp className="w-3 h-3 mr-1 rotate-180" />}
                   ${trade.pnl.toFixed(2)}
                 </div>
               </div>
@@ -351,7 +366,16 @@ const Dashboard: React.FC = () => {
             
             {trades.length === 0 && (
               <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-                <p>No trades yet. Start by adding your first trade!</p>
+                <div className="flex flex-col items-center space-y-3">
+                  <BarChart3 className="w-8 h-8 text-neutral-400" />
+                  <div>
+                    <p className="font-medium">No trades yet</p>
+                    <p className="text-sm">Start by adding your first trade!</p>
+                  </div>
+                  <button className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm font-medium">
+                    Add Trade
+                  </button>
+                </div>
               </div>
             )}
           </div>

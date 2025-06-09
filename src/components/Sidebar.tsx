@@ -17,7 +17,9 @@ import {
   Activity,
   LogOut,
   User,
-  ChevronUp
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
@@ -109,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={onToggleCollapse}
             className="p-2 rounded-lg hover:bg-neutral-800 transition-colors text-neutral-400 hover:text-white"
           >
-            {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5 lg:hidden" />}
+            {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
           </button>
         </div>
 
@@ -149,6 +151,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                 {isCollapsed && item.badge && (
                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-secondary-500 rounded-full"></div>
                 )}
+                
+                {/* Tooltip for collapsed state */}
+                {isCollapsed && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-neutral-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                    {item.label}
+                  </div>
+                )}
               </button>
             );
           })}
@@ -160,7 +169,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={toggleTheme}
             className={`
-              w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors
+              w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group relative
               text-neutral-300 hover:bg-neutral-800 hover:text-white
               ${isCollapsed && 'justify-center lg:px-2'}
             `}
@@ -171,6 +180,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 {isDark ? 'Light Mode' : 'Dark Mode'}
               </span>
             )}
+            {isCollapsed && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-neutral-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                {isDark ? 'Light Mode' : 'Dark Mode'}
+              </div>
+            )}
           </button>
 
           {/* User Profile Menu */}
@@ -178,7 +192,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className={`
-                w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors
+                w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group relative
                 text-neutral-300 hover:bg-neutral-800 hover:text-white
                 ${isCollapsed && 'justify-center lg:px-2'}
                 ${showUserMenu ? 'bg-neutral-800 text-white' : ''}
@@ -199,6 +213,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                   <ChevronUp className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                 </>
+              )}
+              {isCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-neutral-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                  {getUserName()}
+                </div>
               )}
             </button>
 
