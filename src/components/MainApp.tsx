@@ -3,6 +3,7 @@ import Sidebar from './Sidebar';
 import Dashboard from './dashboard/Dashboard';
 import DailyJournal from './journal/DailyJournal';
 import TradesView from './trades/TradesView';
+import SettingsPage from './settings/SettingsPage';
 import PlaceholderTab from './PlaceholderTab';
 import { 
   Calendar, 
@@ -27,6 +28,8 @@ const MainApp: React.FC = () => {
         return <DailyJournal />;
       case 'trades':
         return <TradesView />;
+      case 'settings':
+        return <SettingsPage />;
       case 'notebook':
         return (
           <PlaceholderTab

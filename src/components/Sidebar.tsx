@@ -14,9 +14,11 @@ import {
   Sun,
   Menu,
   X,
-  Activity
+  Activity,
+  LogOut
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -32,6 +34,22 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse 
 }) => {
   const { isDark, toggleTheme } = useTheme();
+  const { signOut, user } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const getUserName = () => {
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name.split(' ')[0];
+    }
+    return user?.email?.split('@')[0] || 'User';
+  };
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -58,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar */}
       <div className={`
         fixed left-0 top-0 h-full bg-gradient-to-b from-neutral-900 via-neutral-900 to-neutral-800 border-r border-neutral-700
-        transition-all duration-300 z-50
+        transition-all duration-300 z-50 flex flex-col
         ${isCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0 w-64'}
       `}>
         {/* Header */}
@@ -83,8 +101,27 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
+        {/* User Info */}
+        {!isCollapsed && (
+          <div className="p-4 border-b border-neutral-700">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold">
+                {getUserName().charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {getUserName()}
+                </p>
+                <p className="text-xs text-neutral-400 truncate">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Navigation */}
-        <nav className="p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -125,7 +162,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-4 left-4 right-4 space-y-2">
+        <div className="p-4 space-y-2 border-t border-neutral-700">
           <button
             onClick={toggleTheme}
             className={`
@@ -142,12 +179,39 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
           </button>
 
-          {!isCollapsed && (
-            <button className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-neutral-300 hover:bg-neutral-800 hover:text-white">
-              <Settings className="w-5 h-5" />
+          <button 
+            onClick={() => {
+              onTabChange('settings');
+              if (window.innerWidth < 1024) onToggleCollapse();
+            }}
+            className={`
+              w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors
+              ${activeTab === 'settings' 
+                ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25'
+                : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
+              }
+              ${isCollapsed && 'justify-center lg:px-2'}
+            `}
+          >
+            <Settings className="w-5 h-5" />
+            {!isCollapsed && (
               <span className="font-medium text-sm">Settings</span>
-            </button>
-          )}
+            )}
+          </button>
+
+          <button
+            onClick={handleSignOut}
+            className={`
+              w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors
+              text-neutral-300 hover:bg-loss-600 hover:text-white
+              ${isCollapsed && 'justify-center lg:px-2'}
+            `}
+          >
+            <LogOut className="w-5 h-5" />
+            {!isCollapsed && (
+              <span className="font-medium text-sm">Sign Out</span>
+            )}
+          </button>
         </div>
       </div>
     </>
