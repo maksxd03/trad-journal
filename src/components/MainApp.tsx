@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Dashboard from './dashboard/Dashboard';
 import DailyJournal from './journal/DailyJournal';
 import TradesView from './trades/TradesView';
 import SettingsPage from './settings/SettingsPage';
 import PlaceholderTab from './PlaceholderTab';
+import AIInsightsPage from '../pages/AIInsightsPage';
+import ChallengesPage from '../pages/challenges';
+import NewChallengePage from '../pages/challenges/new';
+import ChallengeDashboardPage from '../pages/challenges/[id]';
+import AccountsPage from '../pages/AccountsPage';
+import NewAccountPage from '../pages/accounts/new';
 import { 
   Calendar, 
   TrendingUp, 
@@ -13,129 +20,94 @@ import {
   RotateCcw, 
   BookOpen, 
   GraduationCap, 
-  Play 
+  Play,
+  Brain,
+  Trophy,
+  Wallet
 } from 'lucide-react';
 
-const MainApp: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+interface MainAppProps {
+  initialTab?: string;
+}
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'journal':
-        return <DailyJournal />;
-      case 'trades':
-        return <TradesView />;
-      case 'settings':
-        return <SettingsPage />;
-      case 'notebook':
-        return (
-          <PlaceholderTab
-            title="Trading Notebook"
-            description="Document your trading strategies, market observations, and learning progress in an organized notebook."
-            icon={FileText}
-            features={[
-              'Markdown-based note taking',
-              'Strategy documentation',
-              'Market analysis notes',
-              'Image and chart attachments',
-              'Tag-based organization',
-              'Search and filter notes'
-            ]}
-          />
-        );
-      case 'backtesting':
-        return (
-          <PlaceholderTab
-            title="Backtesting Engine"
-            description="Test your trading strategies against historical data to validate performance and optimize parameters."
-            icon={TestTube}
-            features={[
-              'Historical data backtesting',
-              'Strategy parameter optimization',
-              'Monte Carlo simulation',
-              'Risk metrics calculation',
-              'Performance comparison',
-              'Strategy validation reports'
-            ]}
-          />
-        );
-      case 'replay':
-        return (
-          <PlaceholderTab
-            title="Trade Replay"
-            description="Visualize and replay your trades with market context to analyze decision-making and improve performance."
-            icon={RotateCcw}
-            features={[
-              'Visual trade replay with charts',
-              'Market context analysis',
-              'Entry/exit point visualization',
-              'Trade timeline reconstruction',
-              'Decision point analysis',
-              'Performance attribution'
-            ]}
-          />
-        );
-      case 'playbook':
-        return (
-          <PlaceholderTab
-            title="Trading Playbook"
-            description="Create and manage your trading playbook with setup documentation, rules, and strategy guides."
-            icon={BookOpen}
-            features={[
-              'Setup documentation with images',
-              'Trading rules and checklists',
-              'Strategy performance tracking',
-              'Setup success rate analysis',
-              'Risk management rules',
-              'Playbook sharing and export'
-            ]}
-          />
-        );
-      case 'mentor':
-        return (
-          <PlaceholderTab
-            title="Mentor Mode"
-            description="AI-powered trading mentor that provides personalized insights, suggestions, and learning recommendations."
-            icon={GraduationCap}
-            features={[
-              'Personalized trading insights',
-              'Performance improvement suggestions',
-              'Risk management recommendations',
-              'Learning path guidance',
-              'Market education content',
-              'Progress tracking and goals'
-            ]}
-          />
-        );
-      case 'insights':
-        return (
-          <PlaceholderTab
-            title="Insights & Reports"
-            description="Advanced analytics and reporting tools to gain deep insights into your trading performance and patterns."
-            icon={Play}
-            features={[
-              'Advanced performance analytics',
-              'Custom report generation',
-              'Trading pattern analysis',
-              'Risk assessment reports',
-              'Performance benchmarking',
-              'Automated insights generation'
-            ]}
-          />
-        );
-      default:
-        return <Dashboard />;
+const MainApp: React.FC<MainAppProps> = ({ initialTab = 'dashboard' }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Atualiza a aba ativa com base na rota atual
+  useEffect(() => {
+    const path = location.pathname;
+    
+    if (path === '/' || path === '') {
+      setActiveTab('dashboard');
+    } else if (path.startsWith('/challenges')) {
+      setActiveTab('challenges');
+    } else if (path.startsWith('/accounts')) {
+      setActiveTab('accounts');
+    } else if (path === '/journal') {
+      setActiveTab('journal');
+    } else if (path === '/trades') {
+      setActiveTab('trades');
+    } else if (path === '/notebook') {
+      setActiveTab('notebook');
+    } else if (path === '/ai-insights') {
+      setActiveTab('ai-insights');
+    } else if (path === '/settings') {
+      setActiveTab('settings');
     }
+  }, [location.pathname]);
+
+  // Função para renderizar o conteúdo placeholder para abas não implementadas
+  const renderPlaceholder = (title: string, icon: any, description: string, features: string[]) => {
+    return (
+      <PlaceholderTab
+        title={title}
+        description={description}
+        icon={icon}
+        features={features}
+      />
+    );
   };
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 transition-colors duration-200">
       <Sidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          
+          // Navegação baseada na aba selecionada
+          switch (tab) {
+            case 'dashboard':
+              navigate('/');
+              break;
+            case 'journal':
+              navigate('/journal');
+              break;
+            case 'trades':
+              navigate('/trades');
+              break;
+            case 'notebook':
+              navigate('/notebook');
+              break;
+            case 'challenges':
+              navigate('/challenges');
+              break;
+            case 'accounts':
+              navigate('/accounts');
+              break;
+            case 'ai-insights':
+              navigate('/ai-insights');
+              break;
+            case 'settings':
+              navigate('/settings');
+              break;
+            default:
+              navigate('/');
+          }
+        }}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
@@ -146,7 +118,38 @@ const MainApp: React.FC = () => {
         p-4 lg:p-8
       `}>
         <div className="max-w-7xl mx-auto">
-          {renderContent()}
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/journal" element={<DailyJournal />} />
+            <Route path="/trades" element={<TradesView />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/ai-insights" element={<AIInsightsPage />} />
+            <Route path="/notebook" element={renderPlaceholder(
+              "Trading Notebook",
+              FileText,
+              "Document your trading strategies, market observations, and learning progress in an organized notebook.",
+              [
+                'Markdown-based note taking',
+                'Strategy documentation',
+                'Market analysis notes',
+                'Image and chart attachments',
+                'Tag-based organization',
+                'Search and filter notes'
+              ]
+            )} />
+            
+            {/* Rotas de Desafios */}
+            <Route path="/challenges" element={<ChallengesPage />} />
+            <Route path="/challenges/new" element={<NewChallengePage />} />
+            <Route path="/challenges/:id" element={<ChallengeDashboardPage />} />
+            
+            {/* Rotas de Contas */}
+            <Route path="/accounts" element={<AccountsPage />} />
+            <Route path="/accounts/new" element={<NewAccountPage />} />
+            
+            {/* Rota padrão */}
+            <Route path="*" element={<Dashboard />} />
+          </Routes>
         </div>
       </main>
     </div>
