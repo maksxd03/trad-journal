@@ -35,7 +35,13 @@ function App() {
           <AccountsProvider>
             <TradesProvider>
               <Routes>
+                {/* A página inicial pública é "/home" */}
                 <Route path="/home" element={<HomePage />} />
+                
+                {/* Redirecionar a raiz para /home para visitantes não autenticados */}
+                <Route path="/" element={<AppContent />} />
+                
+                {/* Todas as outras rotas são gerenciadas pelo AppContent */}
                 <Route path="/*" element={<AppContent />} />
               </Routes>
               <Toaster
