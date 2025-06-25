@@ -4,9 +4,10 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface SignUpFormProps {
   onToggleMode: () => void;
+  redirectTo?: string;
 }
 
-const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleMode }) => {
+const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleMode, redirectTo }) => {
   const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
@@ -60,6 +61,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleMode }) => {
       if (error) {
         setError(error.message);
       } else {
+        if (redirectTo) {
+          localStorage.setItem('redirectAfterAuth', redirectTo);
+        }
         setSuccess(true);
       }
     } catch (err) {

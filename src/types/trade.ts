@@ -9,11 +9,15 @@ export interface Trade {
   pnl: number;
   pnlPercentage: number;
   setup: string;
-  notes?: string;
+  notes: string;
   tags: string[];
   duration: string;
   commission: number;
   riskRewardRatio: number;
+  challengeId?: string;
+  accountId?: string;
+  screenshotUrl?: string;
+  screenshot?: File;
 }
 
 export interface TradeStats {

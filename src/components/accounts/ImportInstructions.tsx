@@ -1,130 +1,85 @@
-import React from 'react';
-import { Box, Typography, Paper, List, ListItem, ListItemIcon, ListItemText, Divider, Chip, Stack, Alert } from '@mui/material';
-import { ArrowRight, Info, Check, FileText } from 'lucide-react';
-import { getImportInstructions } from '../../lib/importInstructions';
+import React, { useState, useEffect } from 'react';
+import { getBrokerConfig } from '../../lib/importInstructions';
+import { AlertTriangle, HelpCircle } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface ImportInstructionsProps {
-  brokerKey: string;
+  broker: string;
 }
 
-const ImportInstructions: React.FC<ImportInstructionsProps> = ({ brokerKey }) => {
-  // Se não houver broker selecionado, mostra uma mensagem genérica
-  if (!brokerKey) {
+const ImportInstructions: React.FC<ImportInstructionsProps> = ({ broker }) => {
+  const [instructions, setInstructions] = useState<string>('');
+  const [fileTypes, setFileTypes] = useState<string[]>([]);
+  
+  // Atualiza as instruções quando a corretora muda
+  useEffect(() => {
+    if (!broker) {
+      setInstructions('');
+      setFileTypes([]);
+      return;
+    }
+    
+    const brokerConfig = getBrokerConfig(broker);
+    if (brokerConfig) {
+      setInstructions(brokerConfig.instructions);
+      setFileTypes(brokerConfig.fileTypes);
+    } else {
+      setInstructions('');
+      setFileTypes([]);
+    }
+  }, [broker]);
+  
+  // Se não houver corretora selecionada, não exibe nada
+  if (!broker) {
+    return null;
+  }
+  
+  // Se não houver instruções, exibe uma mensagem genérica
+  if (!instructions) {
     return (
-      <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-        <Typography variant="h6" gutterBottom>
-          Instruções de Importação
-        </Typography>
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Selecione uma corretora para ver instruções específicas de exportação.
-        </Alert>
-        <Typography variant="body2" color="text.secondary">
-          O TraderLog Pro suporta importação de trades de várias corretoras e plataformas populares.
-          Selecione sua corretora no formulário à esquerda para ver instruções detalhadas sobre como exportar seus dados.
-        </Typography>
-      </Paper>
+      <div className="mt-4 p-4 bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+        <div className="flex items-start">
+          <AlertTriangle className="w-5 h-5 text-warning-500 mr-2 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-medium text-neutral-900 dark:text-white">
+              Instruções não disponíveis
+            </h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+              Não há instruções específicas para esta corretora. Por favor, exporte o histórico de trades 
+              no formato CSV, XLS, XLSX ou HTML e certifique-se de que ele contenha todas as informações 
+              necessárias sobre seus trades.
+            </p>
+          </div>
+        </div>
+      </div>
     );
   }
-
-  const instructions = getImportInstructions(brokerKey);
-
+  
   return (
-    <Paper elevation={2} sx={{ p: 3, height: '100%', overflow: 'auto' }}>
-      <Typography variant="h6" gutterBottom>
-        {instructions.title}
-      </Typography>
-
-      {/* Formatos suportados */}
-      <Box mb={2}>
-        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          Formatos Suportados:
-        </Typography>
-        <Stack direction="row" spacing={1}>
-          {instructions.supportedFormats.map((format, index) => (
-            <Chip 
-              key={index}
-              label={format}
-              size="small"
-              color="primary"
-              variant="outlined"
-              icon={<FileText size={14} />}
-            />
-          ))}
-        </Stack>
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Passos */}
-      <Typography variant="subtitle1" gutterBottom>
-        Passos para exportação:
-      </Typography>
-      <List dense sx={{ mb: 2 }}>
-        {instructions.steps.map((step, index) => (
-          <ListItem key={index} alignItems="flex-start">
-            <ListItemIcon sx={{ minWidth: '30px' }}>
-              <Box
-                sx={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.75rem',
-                  fontWeight: 'bold'
-                }}
-              >
-                {index + 1}
-              </Box>
-            </ListItemIcon>
-            <ListItemText primary={step} />
-          </ListItem>
-        ))}
-      </List>
-
-      {/* Notas */}
-      {instructions.notes && instructions.notes.length > 0 && (
-        <>
-          <Typography variant="subtitle1" gutterBottom>
-            Notas importantes:
-          </Typography>
-          <List dense>
-            {instructions.notes.map((note, index) => (
-              <ListItem key={index} alignItems="flex-start">
-                <ListItemIcon sx={{ minWidth: '30px' }}>
-                  <Info size={18} color="#1976d2" />
-                </ListItemIcon>
-                <ListItemText primary={note} />
-              </ListItem>
-            ))}
-          </List>
-        </>
-      )}
-
-      {/* Imagem de exemplo */}
-      {instructions.sampleImage && (
-        <Box mt={3}>
-          <Typography variant="subtitle2" gutterBottom>
-            Exemplo:
-          </Typography>
-          <Box 
-            component="img" 
-            src={instructions.sampleImage} 
-            alt="Exemplo de exportação"
-            sx={{ 
-              maxWidth: '100%', 
-              maxHeight: '250px', 
-              border: '1px solid #e0e0e0', 
-              borderRadius: 1,
-              boxShadow: 1
-            }}
-          />
-        </Box>
-      )}
-    </Paper>
+    <div className="mt-4 p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
+      <div className="flex items-start">
+        <HelpCircle className="w-5 h-5 text-primary-600 dark:text-primary-400 mr-2 flex-shrink-0 mt-0.5" />
+        <div>
+          <h3 className="text-sm font-medium text-primary-900 dark:text-primary-300">
+            Como exportar seu histórico de trades
+          </h3>
+          
+          <div className="prose prose-sm dark:prose-invert prose-headings:text-primary-700 dark:prose-headings:text-primary-300 prose-p:text-neutral-600 dark:prose-p:text-neutral-400 mt-2">
+            <ReactMarkdown>
+              {instructions}
+            </ReactMarkdown>
+          </div>
+          
+          {fileTypes.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                Formatos suportados: {fileTypes.map(type => type.toUpperCase()).join(', ')}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

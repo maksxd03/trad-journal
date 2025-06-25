@@ -38,7 +38,9 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
   const chartProps = {
     data,
-    margin: compact ? { top: 5, right: 5, left: 5, bottom: 5 } : { top: 5, right: 30, left: 20, bottom: 5 }
+    margin: compact 
+      ? { top: 5, right: 5, left: 5, bottom: 5 } 
+      : { top: 5, right: 10, left: 0, bottom: 10 }
   };
 
   const renderChart = () => {
@@ -54,6 +56,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                dy={5}
               />
             )}
             {!compact && (
@@ -63,9 +66,18 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                width={40}
               />
             )}
             {!compact && <Tooltip content={<CustomTooltip />} />}
+            <defs>
+              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#00B894" stopOpacity={0.8}/>
+                <stop offset="50%" stopColor="#00B894" stopOpacity={0.4}/>
+                <stop offset="95%" stopColor="#00B894" stopOpacity={0.05}/>
+                <stop offset="100%" stopColor="#00B894" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
             <Area 
               type="monotone" 
               dataKey="cumulativePnL" 
@@ -73,16 +85,8 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
               strokeWidth={2}
               fill={showGradient ? "url(#areaGradient)" : "#00B894"}
               fillOpacity={showGradient ? 1 : 0.1}
+              baseValue="dataMin"
             />
-            {showGradient && (
-              <defs>
-                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00B894" stopOpacity={0.8}/>
-                  <stop offset="50%" stopColor="#00B894" stopOpacity={0.4}/>
-                  <stop offset="100%" stopColor="#00B894" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-            )}
           </AreaChart>
         );
       
@@ -154,8 +158,8 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   };
 
   return (
-    <div className={compact ? "h-full" : "h-64"}>
-      <ResponsiveContainer width="100%" height="100%">
+    <div className={compact ? "h-full" : "h-full w-full"}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={100}>
         {renderChart()}
       </ResponsiveContainer>
     </div>

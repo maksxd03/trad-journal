@@ -19,10 +19,14 @@ import {
   User,
   ChevronUp,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Brain,
+  Trophy,
+  Wallet
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   activeTab: string;
@@ -37,6 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed, 
   onToggleCollapse 
 }) => {
+  const { t } = useTranslation();
   const { isDark, toggleTheme } = useTheme();
   const { signOut, user } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -66,15 +71,12 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'journal', label: 'Daily Journal', icon: Calendar },
-    { id: 'trades', label: 'Trades', icon: TrendingUp },
-    { id: 'notebook', label: 'Notebook', icon: FileText },
-    { id: 'backtesting', label: 'Backtesting', icon: TestTube, badge: 'NEW' },
-    { id: 'replay', label: 'Trade Replay', icon: RotateCcw },
-    { id: 'playbook', label: 'Playbooks', icon: BookOpen, badge: 'NEW' },
-    { id: 'mentor', label: 'Mentor Mode', icon: GraduationCap },
-    { id: 'insights', label: 'Insights', icon: Play }
+    { id: 'dashboard', label: t('sidebar.dashboard'), icon: BarChart3 },
+    { id: 'journal', label: t('sidebar.daily_journal'), icon: Calendar },
+    { id: 'trades', label: t('sidebar.trades'), icon: TrendingUp },
+    { id: 'notebook', label: t('sidebar.notebook'), icon: FileText },
+    { id: 'accounts', label: t('sidebar.accounts'), icon: Wallet },
+    { id: 'ai-insights', label: t('sidebar.ai_insights'), icon: Brain },
   ];
 
   return (
@@ -90,7 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar */}
       <div className={`
         fixed left-0 top-0 h-full bg-gradient-to-b from-neutral-900 via-neutral-900 to-neutral-800 border-r border-neutral-700
-        transition-all duration-300 z-50 flex flex-col
+        transition-all duration-300 z-40 flex flex-col
         ${isCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0 w-64'}
       `}>
         {/* Header */}
@@ -108,7 +110,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
           
           <button
-            onClick={onToggleCollapse}
+            onClick={(e) => {
+              e.preventDefault(); // Previne comportamento padrão
+              onToggleCollapse();
+            }}
             className="p-2 rounded-lg hover:bg-neutral-800 transition-colors text-neutral-400 hover:text-white"
           >
             {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
@@ -124,7 +129,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             return (
               <button
                 key={item.id}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault(); // Previne comportamento padrão
                   onTabChange(item.id);
                   if (window.innerWidth < 1024) onToggleCollapse();
                 }}
@@ -177,12 +183,12 @@ const Sidebar: React.FC<SidebarProps> = ({
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             {!isCollapsed && (
               <span className="font-medium text-sm">
-                {isDark ? 'Light Mode' : 'Dark Mode'}
+                {isDark ? t('sidebar.light_mode') : t('sidebar.dark_mode')}
               </span>
             )}
             {isCollapsed && (
               <div className="absolute left-full ml-2 px-2 py-1 bg-neutral-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                {isDark ? 'Light Mode' : 'Dark Mode'}
+                {isDark ? t('sidebar.light_mode') : t('sidebar.dark_mode')}
               </div>
             )}
           </button>
@@ -233,7 +239,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors"
                 >
                   <Settings className="w-4 h-4" />
-                  <span className="text-sm">Settings</span>
+                  <span className="text-sm">{t('sidebar.settings')}</span>
                 </button>
                 
                 <div className="border-t border-neutral-700"></div>
@@ -246,7 +252,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-300 hover:bg-loss-600 hover:text-white transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="text-sm">Sign Out</span>
+                  <span className="text-sm">{t('sidebar.sign_out')}</span>
                 </button>
               </div>
             )}
@@ -278,7 +284,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors"
                 >
                   <Settings className="w-4 h-4" />
-                  <span className="text-sm">Settings</span>
+                  <span className="text-sm">{t('sidebar.settings')}</span>
                 </button>
                 
                 <div className="border-t border-neutral-700"></div>
@@ -291,7 +297,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-300 hover:bg-loss-600 hover:text-white transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="text-sm">Sign Out</span>
+                  <span className="text-sm">{t('sidebar.sign_out')}</span>
                 </button>
               </div>
             )}

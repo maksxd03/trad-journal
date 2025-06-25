@@ -1,188 +1,213 @@
 import React from 'react';
-import { DivideIcon as LucideIcon } from 'lucide-react';
+import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
+import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { Tooltip } from 'react-tooltip';
+import { useTranslation } from 'react-i18next';
+import ArcGauge from './ArcGauge';
+import RatioBar from './RatioBar';
+import { cn } from '../../lib/utils';
 
-interface KPICardProps {
+export interface KPICardProps {
   title: string;
-  value: string | number;
-  change?: number;
-  changeLabel?: string;
-  icon: LucideIcon;
-  color?: 'primary' | 'profit' | 'loss' | 'neutral' | 'secondary';
-  format?: 'currency' | 'percentage' | 'number';
-  showChart?: boolean;
-  customDisplay?: string;
-  showCircularProgress?: boolean;
-  progressValue?: number;
-  maxValue?: number;
+  mainValue: string | number;
+  mainValueFormatted?: string;
+  changeValue?: number;
+  changePercentage?: number;
+  tooltipContent?: string;
+  variant?: 'default' | 'positive' | 'negative' | 'neutral';
+  
+  // Visualização
+  visualType?: 'none' | 'gauge' | 'bar';
+  
+  // Dados para ArcGauge
+  gaugeData?: {
+    winCount: number;
+    lossCount: number;
+  };
+  
+  // Dados para RatioBar
+  barData?: {
+    winValue: number;
+    lossValue: number;
+  };
+  
+  // Configuração de layout
+  inlineBarLabels?: boolean;
+  contentAlign?: 'left' | 'center';
+  
+  // Métricas secundárias
+  subMetrics?: {
+    label: string;
+    value: string | number;
+  }[];
 }
 
 const KPICard: React.FC<KPICardProps> = ({
   title,
-  value,
-  change,
-  changeLabel,
-  icon: Icon,
-  color = 'neutral',
-  format = 'number',
-  showChart = false,
-  customDisplay,
-  showCircularProgress = false,
-  progressValue = 0,
-  maxValue = 100
+  mainValue,
+  mainValueFormatted,
+  changeValue = 0,
+  changePercentage = 0,
+  tooltipContent,
+  variant = 'default',
+  visualType = 'none',
+  gaugeData,
+  barData,
+  inlineBarLabels = false,
+  contentAlign = 'center',
+  subMetrics = []
 }) => {
-  const formatValue = (val: string | number) => {
-    if (typeof val === 'string') return val;
-    
-    switch (format) {
-      case 'currency':
-        return new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-        }).format(val);
-      case 'percentage':
-        return `${val.toFixed(2)}%`;
-      default:
-        return val.toLocaleString();
-    }
+  const { t } = useTranslation();
+  const tooltipId = `tooltip-${title.replace(/\s+/g, '-').toLowerCase()}`;
+  
+  // Determinar a cor do valor principal com base na variante
+  const getMainValueColor = () => {
+    if (variant === 'positive') return 'text-profit-600 dark:text-profit-400';
+    if (variant === 'negative') return 'text-loss-600 dark:text-loss-400';
+    return 'text-neutral-900 dark:text-white';
   };
-
-  const getColorClasses = () => {
-    switch (color) {
-      case 'primary':
-        return 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400';
-      case 'secondary':
-        return 'bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400';
-      case 'profit':
-        return 'bg-profit-50 dark:bg-profit-900/30 text-profit-600 dark:text-profit-400';
-      case 'loss':
-        return 'bg-loss-50 dark:bg-loss-900/30 text-loss-600 dark:text-loss-400';
-      default:
-        return 'bg-neutral-50 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300';
-    }
-  };
-
+  
+  // Determinar a cor do indicador de mudança
   const getChangeColor = () => {
-    if (!change) return '';
-    return change >= 0 ? 'text-profit-600 dark:text-profit-400' : 'text-loss-600 dark:text-loss-400';
+    if (variant === 'positive' || changeValue > 0) return 'text-profit-600 dark:text-profit-400';
+    if (variant === 'negative' || changeValue < 0) return 'text-loss-600 dark:text-loss-400';
+    return 'text-neutral-500 dark:text-neutral-400';
+  };
+  
+  // Obter o ícone de mudança
+  const getChangeIcon = () => {
+    if (variant === 'positive' || changeValue > 0) return <ArrowUpIcon className="h-3 w-3" />;
+    if (variant === 'negative' || changeValue < 0) return <ArrowDownIcon className="h-3 w-3" />;
+    return null;
   };
 
-  const getProgressColor = () => {
-    switch (color) {
-      case 'profit':
-        return '#00B894';
-      case 'loss':
-        return '#D63031';
-      case 'primary':
-        return '#004E64';
-      case 'secondary':
-        return '#FF7F50';
-      default:
-        return '#6B7280';
-    }
-  };
+  // Formatar valores para exibição inline
+  const formattedWinValue = barData ? `$${Math.abs(barData.winValue).toLocaleString('en-US', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  })}` : '';
+  
+  const formattedLossValue = barData ? `-$${Math.abs(barData.lossValue).toLocaleString('en-US', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  })}` : '';
 
-  const generateMiniChart = () => {
-    const points = Array.from({ length: 8 }, () => Math.random() * 40 + 10);
-    const pathData = points.map((point, index) => 
-      `${index === 0 ? 'M' : 'L'} ${(index * 60) / 7} ${50 - point}`
-    ).join(' ');
-
-    return (
-      <svg width="60" height="20" className="opacity-60">
-        <path
-          d={pathData}
-          stroke="currentColor"
-          strokeWidth="1.5"
-          fill="none"
-          className={color === 'profit' ? 'text-profit-500' : color === 'loss' ? 'text-loss-500' : 'text-primary-500'}
-        />
-      </svg>
-    );
-  };
-
-  const CircularProgress = () => {
-    const radius = 35;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDasharray = circumference;
-    const strokeDashoffset = circumference - (progressValue / maxValue) * circumference;
-    
-    return (
-      <div className="relative w-20 h-20">
-        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 80 80">
-          {/* Background circle */}
-          <circle
-            cx="40"
-            cy="40"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="6"
-            fill="none"
-            className="text-neutral-200 dark:text-neutral-700"
-          />
-          {/* Progress circle */}
-          <circle
-            cx="40"
-            cy="40"
-            r={radius}
-            stroke={getProgressColor()}
-            strokeWidth="6"
-            fill="none"
-            strokeDasharray={strokeDasharray}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-300"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-bold text-neutral-600 dark:text-neutral-300">
-            {progressValue.toFixed(0)}
-          </span>
-        </div>
-      </div>
-    );
-  };
+  // Verificar se é o card de P&L Líquido
+  const isPnLCard = title === t('dashboard.net_pnl');
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-600 p-4 transition-all duration-200 hover:shadow-md hover:shadow-neutral-200/50 dark:hover:shadow-neutral-700/50 hover:border-neutral-300 dark:hover:border-neutral-500">
-      <div className="flex items-start justify-between mb-3">
-        <div className={`p-2 rounded-lg ${getColorClasses()}`}>
-          <Icon className="w-4 h-4" />
+    <div className={cn(
+      "bg-white dark:bg-neutral-800 rounded-lg shadow-md border border-neutral-200 dark:border-neutral-700 p-4 hover:shadow-lg transition-shadow h-full",
+      isPnLCard ? "flex flex-col" : ""
+    )}>
+      {/* Cabeçalho com título e ícone de informação */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1">
+          <h3 
+            className="text-sm font-medium text-neutral-500 dark:text-neutral-400"
+            data-tooltip-id={tooltipId}
+          >
+            {title}
+          </h3>
+          {tooltipContent && (
+            <InformationCircleIcon className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
+          )}
         </div>
-        {showChart && !showCircularProgress && (
-          <div className="flex flex-col items-end">
-            {generateMiniChart()}
-            {change !== undefined && (
-              <div className={`text-xs font-semibold mt-1 ${getChangeColor()}`}>
-                {change >= 0 ? '+' : ''}{change.toFixed(1)}%
-              </div>
-            )}
+        
+        {/* Indicador de mudança */}
+        {(changeValue !== 0 || changePercentage !== 0) && (
+          <div className={cn("flex items-center text-xs font-medium", getChangeColor())}>
+            {getChangeIcon()}
+            <span className="ml-0.5">
+              {changePercentage !== 0 && `${changePercentage > 0 ? '+' : ''}${changePercentage.toFixed(1)}%`}
+            </span>
           </div>
         )}
-        {showCircularProgress && <CircularProgress />}
       </div>
       
-      <div>
-        <h3 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-          {title}
-        </h3>
-        <div className="flex items-baseline space-x-2">
-          <p className="text-xl font-bold text-neutral-900 dark:text-white">
-            {customDisplay || formatValue(value)}
-          </p>
-          {!showChart && !showCircularProgress && change !== undefined && (
-            <div className={`text-sm font-semibold ${getChangeColor()}`}>
-              {change >= 0 ? '+' : ''}{change.toFixed(1)}%
+      {/* Conteúdo principal */}
+      <div className={cn(
+        "flex items-center justify-between",
+        isPnLCard ? "flex-1 items-center" : "mt-3"
+      )}>
+        <div className={cn(
+          "flex-1", 
+          visualType === 'none' ? `flex ${contentAlign === 'left' ? 'justify-start' : 'justify-center'}` : '',
+          contentAlign === 'left' ? 'text-left' : '',
+          isPnLCard ? 'flex items-center' : ''
+        )}>
+          {/* Valor principal - ajustado para manter consistência */}
+          <div className={cn(
+            "text-3xl font-bold", 
+            getMainValueColor()
+          )}>
+            {mainValueFormatted || mainValue}
+          </div>
+          
+          {/* Métricas secundárias */}
+          {subMetrics.length > 0 && (
+            <div className="mt-3 space-y-1">
+              {subMetrics.map((metric, index) => (
+                <div key={index} className="flex justify-between text-xs">
+                  <span className="text-neutral-500 dark:text-neutral-400">{metric.label}</span>
+                  <span className="font-medium text-neutral-700 dark:text-neutral-300">{metric.value}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
-        {changeLabel && !showChart && (
-          <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-            {changeLabel}
+        
+        {/* Visualização - Gauge */}
+        {visualType === 'gauge' && gaugeData && (
+          <div className="ml-2 flex items-center justify-center">
+            <ArcGauge 
+              winCount={gaugeData.winCount} 
+              lossCount={gaugeData.lossCount} 
+            />
           </div>
         )}
       </div>
+      
+      {/* Barra de proporção */}
+      {visualType === 'bar' && barData && !inlineBarLabels && (
+        <div className="mt-4">
+          <RatioBar 
+            winValue={barData.winValue} 
+            lossValue={barData.lossValue} 
+          />
+        </div>
+      )}
+      
+      {/* Barra de proporção com labels inline */}
+      {visualType === 'bar' && barData && inlineBarLabels && (
+        <div className="mt-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium text-profit-600 dark:text-profit-400 min-w-[40px]">
+              {formattedWinValue}
+            </span>
+            <div className="flex-1 h-2.5 rounded-full overflow-hidden flex">
+              <div 
+                className="bg-profit-500 dark:bg-profit-400" 
+                style={{ width: `${(barData.winValue / (barData.winValue + barData.lossValue)) * 100}%` }}
+              />
+              <div 
+                className="bg-loss-500 dark:bg-loss-400" 
+                style={{ width: `${(barData.lossValue / (barData.winValue + barData.lossValue)) * 100}%` }}
+              />
+            </div>
+            <span className="text-xs font-medium text-loss-600 dark:text-loss-400 min-w-[40px] text-right">
+              {formattedLossValue}
+            </span>
+          </div>
+        </div>
+      )}
+      
+      {/* Tooltip */}
+      {tooltipContent && (
+        <Tooltip id={tooltipId} place="top">
+          {tooltipContent}
+        </Tooltip>
+      )}
     </div>
   );
 };

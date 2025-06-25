@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Plus, X, Tag, DollarSign, TrendingUp, TrendingDown, Calendar, Clock } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, X, Tag, DollarSign, TrendingUp, TrendingDown, Calendar, Clock, Image, Upload } from 'lucide-react';
 import { Trade } from '../../types/trade';
+import { useChallenges } from '../../context/ChallengesContext';
+import { useAccounts } from '../../context/AccountsContext';
 
 interface TradeFormProps {
   onSubmit: (trade: Omit<Trade, 'id'>) => void;
@@ -8,6 +10,8 @@ interface TradeFormProps {
 }
 
 const TradeForm: React.FC<TradeFormProps> = ({ onSubmit, onCancel }) => {
+  const { challenges } = useChallenges();
+  const { accounts, syncWithDatabase, selectedAccountId } = useAccounts();
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     time: new Date().toTimeString().slice(0, 5),
@@ -19,10 +23,41 @@ const TradeForm: React.FC<TradeFormProps> = ({ onSubmit, onCancel }) => {
     setup: '',
     notes: '',
     tags: [] as string[],
-    commission: '2.50'
+    commission: '2.50',
+    challengeId: '',
+    accountId: selectedAccountId || ''
   });
+  
+  // Efeito para sincronizar contas ao abrir o formulário
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await syncWithDatabase();
+        console.log('✅ TradeForm: Contas sincronizadas com sucesso');
+      } catch (error) {
+        console.error('❌ TradeForm: Falha ao sincronizar contas', error);
+      }
+    };
+    
+    loadData();
+  }, [syncWithDatabase]);
+  
+  // Se o selectedAccountId mudar após o componente ser montado, atualizar o formulário
+  useEffect(() => {
+    if (selectedAccountId) {
+      setFormData(prev => ({
+        ...prev,
+        accountId: selectedAccountId
+      }));
+    }
+  }, [selectedAccountId]);
+  
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newTag, setNewTag] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +88,10 @@ const TradeForm: React.FC<TradeFormProps> = ({ onSubmit, onCancel }) => {
       tags: formData.tags,
       duration: '1h 30m', // Placeholder
       commission,
-      riskRewardRatio
+      riskRewardRatio,
+      challengeId: formData.challengeId || undefined,
+      accountId: formData.accountId || undefined,
+      screenshot: screenshot // Pass the screenshot file to the onSubmit handler
     };
 
     onSubmit(trade);
@@ -80,6 +118,61 @@ const TradeForm: React.FC<TradeFormProps> = ({ onSubmit, onCancel }) => {
     'Breakout', 'Pullback', 'Reversal', 'Gap Fill', 'Momentum', 
     'Support/Resistance', 'Flag', 'Triangle', 'Channel', 'Other'
   ];
+
+  // Obter todas as contas e desafios, sem filtrar pelo status
+  const allAccounts = accounts;
+  
+  // Para compatibilidade com código legado, converter contas do tipo prop_firm_challenge para desafios
+  const propFirmAccounts = accounts.filter(account => account.type === 'prop_firm_challenge');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setScreenshot(file);
+      
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      setScreenshot(file);
+      
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeScreenshot = () => {
+    setScreenshot(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -299,7 +392,68 @@ const TradeForm: React.FC<TradeFormProps> = ({ onSubmit, onCancel }) => {
             />
           </div>
 
-          {/* Commission */}
+          {/* Screenshot Upload */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              <Image className="w-4 h-4 inline mr-2" />
+              Screenshot do Gráfico (Opcional)
+            </label>
+            
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              accept="image/*" 
+              onChange={handleFileChange} 
+              className="hidden" 
+            />
+            
+            <div 
+              className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                isDragging 
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' 
+                  : 'border-neutral-300 dark:border-neutral-600 hover:border-primary-500 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+              }`}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {previewUrl ? (
+                <div className="relative w-full">
+                  <button 
+                    type="button" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeScreenshot();
+                    }}
+                    className="absolute top-2 right-2 bg-white dark:bg-neutral-800 rounded-full p-1 shadow-md hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors z-10"
+                  >
+                    <X className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+                  </button>
+                  <img 
+                    src={previewUrl} 
+                    alt="Screenshot preview" 
+                    className="w-full h-48 object-contain rounded-lg" 
+                  />
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 text-center">
+                    {screenshot?.name} ({Math.round(screenshot?.size / 1024)}KB)
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-10 h-10 text-neutral-400 mb-2" />
+                  <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Arraste e solte uma imagem ou clique para selecionar
+                  </p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    PNG, JPG ou GIF (max. 5MB)
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Commission and Account/Challenge Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
@@ -315,6 +469,55 @@ const TradeForm: React.FC<TradeFormProps> = ({ onSubmit, onCancel }) => {
                   className="w-full pl-10 pr-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
+            </div>
+            
+            {/* Account Selection Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                Associar à Conta
+              </label>
+              <select
+                value={formData.accountId}
+                onChange={(e) => setFormData(prev => ({ ...prev, accountId: e.target.value }))}
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">Nenhuma (Trade Pessoal)</option>
+                {allAccounts.map(account => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} - {account.broker}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Challenge Selection */}
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                Associar ao Desafio (Legado)
+              </label>
+              <select
+                value={formData.challengeId}
+                onChange={(e) => setFormData(prev => ({ ...prev, challengeId: e.target.value }))}
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">Nenhum (Conta Pessoal)</option>
+                {propFirmAccounts.length > 0 ? (
+                  propFirmAccounts.map(account => (
+                    <option key={account.id} value={account.id}>
+                      {account.name} - {account.broker} {account.rules?.accountSize ? `$${account.rules.accountSize}` : ''}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>Nenhum desafio disponível</option>
+                )}
+              </select>
+              {propFirmAccounts.length === 0 && (
+                <p className="text-xs text-amber-500 mt-1">
+                  Não há desafios disponíveis. Crie um desafio antes de associar trades.
+                </p>
+              )}
             </div>
           </div>
 

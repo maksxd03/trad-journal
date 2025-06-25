@@ -8,6 +8,7 @@ interface ReturnsDistributionProps {
     count: number;
     percentage: number;
   }>;
+  compact?: boolean;
 }
 
 const ReturnsDistribution: React.FC<ReturnsDistributionProps> = ({ data }) => {
@@ -35,22 +36,22 @@ const ReturnsDistribution: React.FC<ReturnsDistributionProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-600 p-6">
-      <div className="flex items-center space-x-3 mb-6">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-600 p-4">
+      <div className="flex items-center space-x-3 mb-4">
         <div className="p-2 bg-secondary-100 dark:bg-secondary-900/30 rounded-lg">
-          <BarChart3 className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
+          <BarChart3 className="w-4 h-4 text-secondary-600 dark:text-secondary-400" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+          <h3 className="text-base font-semibold text-neutral-900 dark:text-white">
             Returns Distribution
           </h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-xs text-neutral-600 dark:text-neutral-400">
             Histogram of trade outcomes
           </p>
         </div>
       </div>
 
-      <div className="h-64">
+      <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
@@ -79,22 +80,22 @@ const ReturnsDistribution: React.FC<ReturnsDistributionProps> = ({ data }) => {
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-        <div className="p-3 bg-loss-50 dark:bg-loss-900/20 rounded-lg">
-          <div className="text-sm text-loss-600 dark:text-loss-400 font-medium">Losses</div>
-          <div className="text-lg font-bold text-loss-700 dark:text-loss-300">
+      <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+        <div className="p-2 bg-loss-50 dark:bg-loss-900/20 rounded-lg">
+          <div className="text-xs text-loss-600 dark:text-loss-400 font-medium">Losses</div>
+          <div className="text-base font-bold text-loss-700 dark:text-loss-300">
             {data.filter(d => d.range.includes('-')).reduce((sum, d) => sum + d.count, 0)}
           </div>
         </div>
-        <div className="p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
-          <div className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Breakeven</div>
-          <div className="text-lg font-bold text-neutral-700 dark:text-neutral-300">
+        <div className="p-2 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+          <div className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">Breakeven</div>
+          <div className="text-base font-bold text-neutral-700 dark:text-neutral-300">
             {data.find(d => d.range === '0')?.count || 0}
           </div>
         </div>
-        <div className="p-3 bg-profit-50 dark:bg-profit-900/20 rounded-lg">
-          <div className="text-sm text-profit-600 dark:text-profit-400 font-medium">Profits</div>
-          <div className="text-lg font-bold text-profit-700 dark:text-profit-300">
+        <div className="p-2 bg-profit-50 dark:bg-profit-900/20 rounded-lg">
+          <div className="text-xs text-profit-600 dark:text-profit-400 font-medium">Profits</div>
+          <div className="text-base font-bold text-profit-700 dark:text-profit-300">
             {data.filter(d => d.range.includes('+')).reduce((sum, d) => sum + d.count, 0)}
           </div>
         </div>

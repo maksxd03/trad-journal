@@ -2,15 +2,26 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, TrendingUp } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, getDay, startOfWeek, endOfWeek, eachWeekOfInterval } from 'date-fns';
 import { CalendarTrade } from '../../types/trade';
+import { useTranslation } from 'react-i18next';
 
 interface TradingCalendarProps {
   data: CalendarTrade[];
   enhanced?: boolean;
+  onDateClick?: (date: string) => void;
+  compact?: boolean;
 }
 
-const TradingCalendar: React.FC<TradingCalendarProps> = ({ data, enhanced = false }) => {
-  // Definir dezembro de 2023 como padrão para mostrar os dados reais
-  const [currentDate, setCurrentDate] = useState(new Date(2023, 11, 1)); // Dezembro 2023
+const TradingCalendar: React.FC<TradingCalendarProps> = ({ data, enhanced = false, onDateClick, compact = false }) => {
+  const { t } = useTranslation();
+  // Set the current date to June 19, 2025
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 5, 19)); // June 2025 (month is 0-indexed)
+
+  // Function to check if a date is our simulated "today" (June 19, 2025)
+  const isSimulatedToday = (date: Date) => {
+    return date.getFullYear() === 2025 && 
+           date.getMonth() === 5 && 
+           date.getDate() === 19;
+  };
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -37,6 +48,19 @@ const TradingCalendar: React.FC<TradingCalendarProps> = ({ data, enhanced = fals
   const getTradeForDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return data.find(trade => trade.date === dateStr);
+  };
+
+  // Handle day click
+  const handleDayClick = (day: Date) => {
+    if (onDateClick && isSameMonth(day, currentDate)) {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const trade = data.find(t => t.date === dateStr);
+      
+      // Only trigger click for dates that have trades
+      if (trade) {
+        onDateClick(dateStr);
+      }
+    }
   };
 
   // Calcular total da semana
@@ -83,46 +107,54 @@ const TradingCalendar: React.FC<TradingCalendarProps> = ({ data, enhanced = fals
     return `${pnl > 0 ? '' : '-'}$${Math.abs(pnl).toFixed(0)}`;
   };
 
+  // Dias da semana traduzidos
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => 
+    t(`calendar.days.${day.toLowerCase()}`)
+  );
+
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-600 shadow-xl overflow-hidden">
+    <div className={`bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-600 ${compact ? 'shadow-sm' : 'shadow-xl'} overflow-hidden`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-600 bg-gradient-to-r from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700">
-        <div className="flex items-center space-x-4">
+      <div className={`flex items-center justify-between ${compact ? 'p-3' : 'p-6'} border-b border-neutral-200 dark:border-neutral-600 bg-gradient-to-r from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700`}>
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => navigateMonth('prev')}
-            className="p-3 rounded-xl hover:bg-white dark:hover:bg-neutral-600 transition-all duration-200 shadow-sm"
+            className={`${compact ? 'p-1.5' : 'p-3'} rounded-lg hover:bg-white dark:hover:bg-neutral-600 transition-all duration-200 shadow-sm`}
           >
-            <ChevronLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+            <ChevronLeft className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-neutral-600 dark:text-neutral-400`} />
           </button>
           
-          <div className="text-2xl font-bold text-neutral-900 dark:text-white">
+          <div className={`${compact ? 'text-base' : 'text-2xl'} font-bold text-neutral-900 dark:text-white`}>
             {format(currentDate, 'MMMM yyyy')}
           </div>
           
           <button
             onClick={() => navigateMonth('next')}
-            className="p-3 rounded-xl hover:bg-white dark:hover:bg-neutral-600 transition-all duration-200 shadow-sm"
+            className={`${compact ? 'p-1.5' : 'p-3'} rounded-lg hover:bg-white dark:hover:bg-neutral-600 transition-all duration-200 shadow-sm`}
           >
-            <ChevronRight className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+            <ChevronRight className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-neutral-600 dark:text-neutral-400`} />
           </button>
         </div>
         
-        <button className="px-6 py-3 bg-primary-500 text-white rounded-xl text-sm font-semibold hover:bg-primary-600 transition-all duration-200 shadow-lg hover:shadow-xl">
-          This month
+        <button 
+          onClick={() => setCurrentDate(new Date(2025, 5, 1))}
+          className={`${compact ? 'px-3 py-1.5 text-xs rounded-lg' : 'px-6 py-3 rounded-xl text-sm'} bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-all duration-200 ${compact ? 'shadow-sm' : 'shadow-lg hover:shadow-xl'}`}
+        >
+          {t('common.this_month')}
         </button>
       </div>
 
       {/* Calendar Grid */}
-      <div className="p-6">
+      <div className={compact ? 'p-2' : 'p-6'}>
         {/* Day Headers */}
-        <div className="grid grid-cols-8 gap-4 mb-6">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="text-center text-sm font-semibold text-neutral-500 dark:text-neutral-400 py-3">
+        <div className="grid grid-cols-8 gap-1 mb-2">
+          {weekDays.map(day => (
+            <div key={day} className={`text-center ${compact ? 'text-xs py-1' : 'text-sm py-3'} font-semibold text-neutral-500 dark:text-neutral-400`}>
               {day}
             </div>
           ))}
-          <div className="text-center text-sm font-semibold text-primary-600 dark:text-primary-400 py-3 bg-primary-50 dark:bg-primary-900/30 rounded-lg">
-            Weekly
+          <div className={`text-center ${compact ? 'text-xs py-1' : 'text-sm py-3'} font-semibold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg`}>
+            {t('calendar.weekly')}
           </div>
         </div>
 
@@ -135,37 +167,39 @@ const TradingCalendar: React.FC<TradingCalendarProps> = ({ data, enhanced = fals
           const weeklyTotal = getWeeklyTotal(weekStart);
 
           return (
-            <div key={weekIndex} className="grid grid-cols-8 gap-4 mb-4">
+            <div key={weekIndex} className="grid grid-cols-8 gap-1 mb-1">
               {/* Days of the week */}
               {weekDays.map(day => {
                 const trade = getTradeForDate(day);
                 const isCurrentMonth = isSameMonth(day, currentDate);
-                const isTodayDate = isToday(day);
+                const hasTrades = !!trade;
 
                 return (
                   <div
                     key={day.toString()}
+                    onClick={() => handleDayClick(day)}
                     className={`
-                      aspect-square flex flex-col items-center justify-center rounded-xl transition-all duration-300 cursor-pointer relative text-center p-3 min-h-[85px]
+                      aspect-square flex flex-col items-center justify-center rounded-lg transition-all duration-300 relative text-center ${compact ? 'p-1 min-h-[50px]' : 'p-3 min-h-[85px]'}
                       ${!isCurrentMonth 
                         ? 'text-neutral-300 dark:text-neutral-600 bg-neutral-50 dark:bg-neutral-800/50 opacity-40' 
                         : trade 
-                          ? `${getPnLColor(trade.pnl, trade.tradeCount)} hover:scale-105 hover:z-10 hover:shadow-lg transform` 
-                          : 'bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-700 dark:to-neutral-600 border border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:bg-gradient-to-br hover:from-neutral-100 hover:to-neutral-200 dark:hover:from-neutral-600 dark:hover:to-neutral-500'
+                          ? `${getPnLColor(trade.pnl, trade.tradeCount)} hover:scale-105 hover:z-10 hover:shadow-lg transform cursor-pointer` 
+                          : 'bg-white dark:bg-neutral-700/50 border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700'
                       }
-                      ${isTodayDate && isCurrentMonth ? 'ring-2 ring-primary-400 ring-offset-2 dark:ring-offset-neutral-800' : ''}
+                      ${isSimulatedToday(day) && isCurrentMonth ? 'ring-2 ring-primary-500' : ''}
+                      ${hasTrades && isCurrentMonth ? 'cursor-pointer' : ''}
                     `}
                   >
-                    <div className={`text-base font-bold ${trade ? 'mb-1' : ''}`}>
+                    <div className={`${compact ? 'text-xs' : 'text-base'} font-bold ${trade ? 'mb-0.5' : ''}`}>
                       {day.getDate()}
                     </div>
                     {trade && (
                       <>
-                        <div className="text-xs font-black leading-tight mb-1">
+                        <div className={`${compact ? 'text-[10px]' : 'text-xs'} font-black leading-tight ${compact ? 'mb-0.5' : 'mb-1'}`}>
                           {formatPnL(trade.pnl)}
                         </div>
-                        <div className="text-xs opacity-80 leading-tight font-medium">
-                          {trade.tradeCount} trade{trade.tradeCount !== 1 ? 's' : ''}
+                        <div className={`${compact ? 'text-[9px]' : 'text-xs'} opacity-80 leading-tight font-medium`}>
+                          {trade.tradeCount} {trade.tradeCount !== 1 ? t('calendar.trades') : t('calendar.trade')}
                         </div>
                       </>
                     )}
@@ -173,17 +207,17 @@ const TradingCalendar: React.FC<TradingCalendarProps> = ({ data, enhanced = fals
                 );
               })}
 
-              {/* Weekly Total - DESTACADO */}
+              {/* Weekly Total */}
               <div className={`
-                aspect-square flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all duration-300 min-h-[85px] p-3 font-bold shadow-md
+                aspect-square flex flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all duration-300 ${compact ? 'min-h-[50px] p-1' : 'min-h-[85px] p-3'} font-bold ${compact ? 'shadow-sm' : 'shadow-md'}
                 ${getWeeklyTotalColor(weeklyTotal)}
               `}>
-                <div className="text-xs font-semibold mb-1 opacity-90">Week</div>
-                <div className="text-sm font-black">
+                <div className={`${compact ? 'text-[9px]' : 'text-xs'} font-semibold ${compact ? 'mb-0.5' : 'mb-1'} opacity-90`}>{t('calendar.week')}</div>
+                <div className={`${compact ? 'text-xs' : 'text-sm'} font-black`}>
                   {formatPnL(weeklyTotal)}
                 </div>
-                <div className="text-xs opacity-70 mt-1">
-                  Total
+                <div className={`${compact ? 'text-[9px]' : 'text-xs'} opacity-70 ${compact ? 'mt-0.5' : 'mt-1'}`}>
+                  {t('calendar.total')}
                 </div>
               </div>
             </div>

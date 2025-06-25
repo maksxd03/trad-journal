@@ -1,203 +1,216 @@
-interface ImportInstructions {
-  title: string;
-  steps: string[];
-  notes?: string[];
-  supportedFormats: string[];
-  sampleImage?: string;
+/**
+ * Este arquivo contém as configurações e instruções para importação de arquivos
+ * de diferentes corretoras.
+ */
+
+interface BrokerConfig {
+  value: string;
+  label: string;
+  instructions: string;
+  fieldMapping: Record<string, string | string[] | ((row: any) => any)>;
+  fileTypes: string[];
 }
 
-type BrokerInstructions = {
-  [key: string]: ImportInstructions;
-};
+interface DateFormat {
+  value: string;
+  label: string;
+}
 
-const brokerInstructions: BrokerInstructions = {
-  "apex": {
-    title: "Como exportar seus trades do Apex Trader Funding",
-    steps: [
-      "Faça login na sua conta Apex Trader Funding",
-      "No painel principal, clique em 'Reports' no menu superior",
-      "Selecione 'Trade History'",
-      "Defina o intervalo de datas que você deseja exportar",
-      "Clique no botão 'Export to CSV' no canto superior direito",
-      "Salve o arquivo no seu computador"
-    ],
-    notes: [
-      "Certifique-se de que todos os trades estejam incluídos no período selecionado",
-      "O arquivo CSV do Apex inclui todas as informações necessárias, incluindo P&L, horários e tamanhos de posição"
-    ],
-    supportedFormats: ["CSV"],
-    sampleImage: "/images/import-samples/apex-sample.png"
-  },
-  "ftmo": {
-    title: "Como exportar seus trades da FTMO",
-    steps: [
-      "Acesse sua conta FTMO e faça login",
-      "No painel de controle, vá para 'Trading Performance'",
-      "Clique na aba 'History'",
-      "Defina o período de tempo desejado usando os filtros de data",
-      "Clique no botão 'Export' no canto inferior direito",
-      "Escolha o formato 'CSV' na caixa de diálogo",
-      "Salve o arquivo no seu computador"
-    ],
-    notes: [
-      "A FTMO permite exportar dados em CSV e Excel, recomendamos CSV para melhor compatibilidade",
-      "Verifique se o relatório inclui todas as informações de trades, incluindo símbolos e timestamps"
-    ],
-    supportedFormats: ["CSV", "XLS"],
-    sampleImage: "/images/import-samples/ftmo-sample.png"
-  },
-  "topstep": {
-    title: "Como exportar seus trades do Topstep",
-    steps: [
-      "Faça login na sua conta Topstep",
-      "Navegue até 'Performance' no menu principal",
-      "Selecione 'Trade History'",
-      "Ajuste os filtros para o período desejado",
-      "Clique no botão 'Download CSV' no canto superior direito",
-      "Escolha o local para salvar o arquivo no seu computador"
-    ],
-    notes: [
-      "O Topstep fornece dados detalhados incluindo métricas de performance",
-      "Se você tiver múltiplas contas, certifique-se de escolher a conta correta antes de exportar"
-    ],
-    supportedFormats: ["CSV"],
-    sampleImage: "/images/import-samples/topstep-sample.png"
-  },
-  "tradovate": {
-    title: "Como exportar seus trades do Tradovate",
-    steps: [
-      "Acesse sua conta Tradovate",
-      "No menu lateral, clique em 'Reports'",
-      "Selecione 'Trading Activity'",
-      "Escolha o intervalo de datas para exportação",
-      "Clique no botão 'Export' no canto inferior",
-      "Selecione formato CSV na caixa de diálogo",
-      "Salve o arquivo no local desejado"
-    ],
-    notes: [
-      "O Tradovate permite exportação de vários tipos de relatórios, certifique-se de escolher 'Trading Activity' para dados completos",
-      "Os arquivos exportados contêm todas as informações necessárias para análise detalhada"
-    ],
-    supportedFormats: ["CSV", "XLS"],
-    sampleImage: "/images/import-samples/tradovate-sample.png"
-  },
-  "ninjatrader": {
-    title: "Como exportar seus trades do NinjaTrader",
-    steps: [
-      "Abra o NinjaTrader em seu computador",
-      "Vá para o menu 'Control Center'",
-      "Clique em 'Account Performance'",
-      "Selecione a conta e o período de tempo",
-      "Clique em 'Export' e escolha 'Excel' ou 'CSV'",
-      "Especifique o local para salvar o arquivo"
-    ],
-    notes: [
-      "O NinjaTrader oferece vários relatórios detalhados, escolha 'Trade List' para ter dados completos de cada operação",
-      "Para importação mais precisa, recomendamos usar o formato CSV"
-    ],
-    supportedFormats: ["CSV", "XLS"],
-    sampleImage: "/images/import-samples/ninjatrader-sample.png"
-  },
-  "mt4": {
-    title: "Como exportar seus trades do MetaTrader 4",
-    steps: [
-      "Abra sua plataforma MetaTrader 4",
-      "Clique na guia 'Account History' no Terminal (Ctrl+T)",
-      "Clique com o botão direito na lista de operações",
-      "Selecione 'Save as Report' ou 'Save as Detailed Report'",
-      "Escolha o formato 'HTML' na caixa de diálogo",
-      "Depois, abra o arquivo HTML em um navegador e salve como CSV ou copie para Excel"
-    ],
-    notes: [
-      "O MT4 não exporta diretamente para CSV, mas você pode facilmente converter o relatório HTML para CSV",
-      "Certifique-se de que o relatório detalhado inclui todas as informações necessárias (entrada, saída, P&L, etc.)"
-    ],
-    supportedFormats: ["HTML → CSV"],
-    sampleImage: "/images/import-samples/mt4-sample.png"
-  },
-  "mt5": {
-    title: "Como exportar seus trades do MetaTrader 5",
-    steps: [
-      "Abra sua plataforma MetaTrader 5",
-      "Acesse o Terminal (Ctrl+T) e clique na aba 'History'",
-      "Clique com o botão direito na lista de operações",
-      "Selecione 'Save as Report'",
-      "Escolha o formato 'CSV' na caixa de diálogo",
-      "Selecione o local para salvar o arquivo"
-    ],
-    notes: [
-      "O MT5 permite exportação direta para CSV, facilitando a importação",
-      "Verifique se o relatório contém todas as colunas necessárias antes de importar"
-    ],
-    supportedFormats: ["CSV"],
-    sampleImage: "/images/import-samples/mt5-sample.png"
-  },
-  "ctrader": {
-    title: "Como exportar seus trades do cTrader",
-    steps: [
-      "Abra a plataforma cTrader",
-      "Clique na aba 'History' no painel inferior",
-      "Defina o intervalo de datas desejado",
-      "Clique no ícone de 'Export' (parece um disco ou seta para baixo)",
-      "Selecione 'CSV' como formato de exportação",
-      "Escolha onde salvar o arquivo no seu computador"
-    ],
-    notes: [
-      "O cTrader exporta dados completos incluindo todos os detalhes de execução",
-      "Para melhor compatibilidade, escolha o formato CSV"
-    ],
-    supportedFormats: ["CSV"],
-    sampleImage: "/images/import-samples/ctrader-sample.png"
-  },
-  "generic": {
-    title: "Formato genérico para importação de trades",
-    steps: [
-      "Prepare um arquivo CSV com as seguintes colunas: Data, Hora, Símbolo, Direção (Compra/Venda), Quantidade, Preço de Entrada, Preço de Saída, P&L",
-      "Certifique-se de que as datas estão no formato selecionado no formulário",
-      "Salve o arquivo como CSV (valores separados por vírgula)",
-      "Selecione este arquivo para importação"
-    ],
-    notes: [
-      "Se sua corretora não está listada, você pode formatar manualmente seu arquivo de acordo com este padrão",
-      "Exemplo de linha: 12/01/2023,10:30:45,ES,Compra,1,4500.50,4510.25,9.75"
-    ],
-    supportedFormats: ["CSV", "XLS", "XLSX"],
-    sampleImage: "/images/import-samples/generic-sample.png"
-  }
-};
+/**
+ * Retorna a lista de corretoras suportadas
+ */
+export function getSupportedBrokers() {
+  return brokerConfigs.map(broker => ({
+    value: broker.value,
+    label: broker.label
+  }));
+}
 
-export const getImportInstructions = (brokerKey: string): ImportInstructions => {
-  // Tenta obter as instruções para a corretora específica
-  const instructions = brokerInstructions[brokerKey.toLowerCase()];
-  
-  // Se não encontrar, retorna as instruções genéricas
-  if (!instructions) {
-    return brokerInstructions.generic;
-  }
-  
-  return instructions;
-};
+/**
+ * Retorna a configuração de uma corretora específica
+ */
+export function getBrokerConfig(brokerCode: string): BrokerConfig | null {
+  return brokerConfigs.find(broker => broker.value === brokerCode) || null;
+}
 
-export const getSupportedBrokers = (): { value: string; label: string }[] => {
+/**
+ * Retorna os formatos de data suportados
+ */
+export function getDateFormats(): DateFormat[] {
   return [
-    { value: "apex", label: "Apex Trader Funding" },
-    { value: "ftmo", label: "FTMO" },
-    { value: "topstep", label: "Topstep" },
-    { value: "tradovate", label: "Tradovate" },
-    { value: "ninjatrader", label: "NinjaTrader" },
-    { value: "mt4", label: "MetaTrader 4" },
-    { value: "mt5", label: "MetaTrader 5" },
-    { value: "ctrader", label: "cTrader" },
-    { value: "generic", label: "Outro / Genérico" }
+    { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY (ex: 01/31/2023)' },
+    { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY (ex: 31/01/2023)' },
+    { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD (ex: 2023-01-31)' }
   ];
-};
+}
 
-export const getDateFormats = (): { value: string; label: string }[] => {
-  return [
-    { value: "MM/DD/YYYY", label: "MM/DD/YYYY (Ex: 01/31/2023)" },
-    { value: "DD/MM/YYYY", label: "DD/MM/YYYY (Ex: 31/01/2023)" },
-    { value: "YYYY-MM-DD", label: "YYYY-MM-DD (Ex: 2023-01-31)" },
-    { value: "MM-DD-YYYY", label: "MM-DD-YYYY (Ex: 01-31-2023)" },
-    { value: "DD-MM-YYYY", label: "DD-MM-YYYY (Ex: 31-01-2023)" }
-  ];
-}; 
+/**
+ * Configurações das corretoras suportadas
+ */
+const brokerConfigs: BrokerConfig[] = [
+  {
+    value: 'metatrader4',
+    label: 'MetaTrader 4',
+    instructions: `
+      # Instruções para exportar histórico do MetaTrader 4
+      
+      1. Abra o MetaTrader 4
+      2. Acesse o "Terminal" (Ctrl+T)
+      3. Vá para a aba "Histórico de Conta"
+      4. Clique com o botão direito e selecione "Salvar como Relatório" ou "Salvar como Detalhado"
+      5. Escolha o formato CSV ou HTML
+      6. Salve o arquivo e importe-o aqui
+    `,
+    fieldMapping: {
+      ticket: ['Ticket', 'Order', '#'],
+      openTime: ['Open Time', 'Time', 'OpenTime'],
+      type: ['Type', 'Direction'],
+      volume: ['Size', 'Volume', 'Lots'],
+      symbol: ['Symbol', 'Item', 'Instrument'],
+      openPrice: ['Price', 'Open Price', 'OpenPrice'],
+      closeTime: ['Close Time', 'CloseTime'],
+      closePrice: ['Close Price', 'ClosePrice'],
+      pnl: ['Profit', 'P/L', 'Profit/Loss'],
+      commission: ['Commission', 'Comm'],
+      swap: ['Swap', 'Rollover'],
+      comment: ['Comment']
+    },
+    fileTypes: ['csv', 'html']
+  },
+  {
+    value: 'metatrader5',
+    label: 'MetaTrader 5',
+    instructions: `
+      # Instruções para exportar histórico do MetaTrader 5
+      
+      1. Abra o MetaTrader 5
+      2. Acesse o "Terminal" (Ctrl+T)
+      3. Vá para a aba "Histórico de Conta"
+      4. Clique com o botão direito e selecione "Salvar como Relatório" ou "Salvar como Detalhado"
+      5. Escolha o formato CSV ou HTML
+      6. Salve o arquivo e importe-o aqui
+    `,
+    fieldMapping: {
+      ticket: ['Ticket', 'Deal', '#'],
+      openTime: ['Time', 'Open Time', 'OpenTime'],
+      type: ['Type', 'Direction'],
+      volume: ['Volume', 'Size', 'Lots'],
+      symbol: ['Symbol', 'Instrument'],
+      openPrice: ['Price', 'Open Price', 'OpenPrice'],
+      closeTime: ['Close Time', 'CloseTime'],
+      closePrice: ['Close Price', 'ClosePrice'],
+      pnl: ['Profit', 'P/L', 'Profit/Loss'],
+      commission: ['Commission', 'Comm'],
+      swap: ['Swap', 'Rollover'],
+      comment: ['Comment']
+    },
+    fileTypes: ['csv', 'html']
+  },
+  {
+    value: 'tradingview',
+    label: 'TradingView',
+    instructions: `
+      # Instruções para exportar histórico do TradingView
+      
+      1. Abra o TradingView e acesse sua conta
+      2. Vá para "Histórico de Negociações" (Trading History)
+      3. Clique no botão "Exportar" ou "Download"
+      4. Escolha o formato CSV
+      5. Salve o arquivo e importe-o aqui
+    `,
+    fieldMapping: {
+      ticket: 'ID',
+      openTime: 'Open Time',
+      closeTime: 'Close Time',
+      symbol: 'Symbol',
+      type: 'Side',
+      volume: 'Amount',
+      openPrice: 'Entry Price',
+      closePrice: 'Exit Price',
+      pnl: 'Profit/Loss',
+      commission: 'Commission',
+      swap: 'Swap',
+      comment: 'Notes'
+    },
+    fileTypes: ['csv']
+  },
+  {
+    value: 'ftmo',
+    label: 'FTMO',
+    instructions: `
+      # Instruções para exportar histórico do FTMO
+      
+      1. Acesse sua conta FTMO
+      2. Vá para a seção "Trading History" ou "Histórico de Trades"
+      3. Clique no botão "Export" ou "Download"
+      4. Escolha o formato CSV ou XLSX
+      5. Salve o arquivo e importe-o aqui
+    `,
+    fieldMapping: {
+      ticket: 'Ticket',
+      openTime: 'Open Time',
+      closeTime: 'Close Time',
+      symbol: 'Symbol',
+      type: 'Type',
+      volume: 'Size',
+      openPrice: 'Open Price',
+      closePrice: 'Close Price',
+      pnl: 'Profit',
+      commission: 'Commission',
+      swap: 'Swap',
+      comment: 'Comment'
+    },
+    fileTypes: ['csv', 'xlsx']
+  },
+  {
+    value: 'ninjatrader',
+    label: 'NinjaTrader',
+    instructions: `
+      # Instruções para exportar histórico do NinjaTrader
+      
+      1. Abra o NinjaTrader
+      2. Vá para "Control Center" > "Trade Performance"
+      3. Selecione o período desejado
+      4. Clique em "Export" e escolha CSV
+      5. Salve o arquivo e importe-o aqui
+    `,
+    fieldMapping: {
+      ticket: 'Order ID',
+      openTime: 'Entry Time',
+      closeTime: 'Exit Time',
+      symbol: 'Instrument',
+      type: 'Direction',
+      volume: 'Quantity',
+      openPrice: 'Entry Price',
+      closePrice: 'Exit Price',
+      pnl: 'Profit',
+      commission: 'Commission',
+      comment: 'Notes'
+    },
+    fileTypes: ['csv']
+  },
+  {
+    value: 'ib',
+    label: 'Interactive Brokers',
+    instructions: `
+      # Instruções para exportar histórico do Interactive Brokers
+      
+      1. Acesse o Portal do Cliente ou o TWS
+      2. Vá para "Reports" > "Flex Queries"
+      3. Crie uma nova consulta incluindo "Trades"
+      4. Execute a consulta e baixe o arquivo CSV
+      5. Importe o arquivo aqui
+    `,
+    fieldMapping: {
+      ticket: 'Exec ID',
+      openTime: 'Date/Time',
+      symbol: 'Symbol',
+      type: 'Buy/Sell',
+      volume: 'Quantity',
+      openPrice: 'Price',
+      pnl: 'Realized P/L',
+      commission: 'Commission'
+    },
+    fileTypes: ['csv', 'xlsx']
+  }
+]; 

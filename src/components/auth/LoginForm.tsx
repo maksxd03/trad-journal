@@ -5,9 +5,10 @@ import { useAuth } from '../../contexts/AuthContext';
 interface LoginFormProps {
   onToggleMode: () => void;
   onForgotPassword: () => void;
+  redirectTo?: string;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, onForgotPassword }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, onForgotPassword, redirectTo }) => {
   const { signIn } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -27,6 +28,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, onForgotPassword })
       
       if (error) {
         setError(error.message);
+      } else if (redirectTo) {
+        // Redirect to the specified page after successful login
+        window.location.href = redirectTo;
       }
     } catch (err) {
       setError('An unexpected error occurred');

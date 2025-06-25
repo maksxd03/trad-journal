@@ -9,6 +9,7 @@ interface DrawdownChartProps {
     peak: number;
     recovery: number;
   }>;
+  compact?: boolean;
 }
 
 const DrawdownChart: React.FC<DrawdownChartProps> = ({ data }) => {
@@ -30,17 +31,17 @@ const DrawdownChart: React.FC<DrawdownChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-600 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-600 p-4">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-loss-100 dark:bg-loss-900/30 rounded-lg">
-            <TrendingDown className="w-5 h-5 text-loss-600 dark:text-loss-400" />
+            <TrendingDown className="w-4 h-4 text-loss-600 dark:text-loss-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-white">
               Drawdown Analysis
             </h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            <p className="text-xs text-neutral-600 dark:text-neutral-400">
               Risk periods and recovery tracking
             </p>
           </div>
@@ -48,14 +49,14 @@ const DrawdownChart: React.FC<DrawdownChartProps> = ({ data }) => {
 
         <div className="flex items-center space-x-4">
           <div className="text-center">
-            <div className="text-sm text-neutral-500 dark:text-neutral-400">Max DD</div>
-            <div className="text-lg font-bold text-loss-600 dark:text-loss-400">
+            <div className="text-xs text-neutral-500 dark:text-neutral-400">Max DD</div>
+            <div className="text-base font-bold text-loss-600 dark:text-loss-400">
               {maxDrawdown.toFixed(2)}%
             </div>
           </div>
           <div className="text-center">
-            <div className="text-sm text-neutral-500 dark:text-neutral-400">Current</div>
-            <div className={`text-lg font-bold ${
+            <div className="text-xs text-neutral-500 dark:text-neutral-400">Current</div>
+            <div className={`text-base font-bold ${
               currentDrawdown < -5 
                 ? 'text-loss-600 dark:text-loss-400' 
                 : 'text-neutral-600 dark:text-neutral-400'
@@ -67,17 +68,17 @@ const DrawdownChart: React.FC<DrawdownChartProps> = ({ data }) => {
       </div>
 
       {currentDrawdown < -10 && (
-        <div className="mb-4 p-3 bg-loss-50 dark:bg-loss-900/20 border border-loss-200 dark:border-loss-800 rounded-lg">
+        <div className="mb-3 p-2 bg-loss-50 dark:bg-loss-900/20 border border-loss-200 dark:border-loss-800 rounded-lg">
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-4 h-4 text-loss-600 dark:text-loss-400" />
-            <span className="text-sm font-medium text-loss-700 dark:text-loss-300">
+            <span className="text-xs font-medium text-loss-700 dark:text-loss-300">
               High Drawdown Alert: Consider reducing position sizes
             </span>
           </div>
         </div>
       )}
 
-      <div className="h-64">
+      <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
